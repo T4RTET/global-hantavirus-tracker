@@ -25,7 +25,9 @@ Without Supabase env vars, the site runs in demo-read mode using clearly marked 
 ## Database Setup
 
 1. Create a Supabase project.
-2. Run `supabase/001_schema.sql` in the Supabase SQL editor.
+2. Run migrations in order in the Supabase SQL editor:
+   - `supabase/001_schema.sql`
+   - `supabase/002_ingestion_pipeline.sql`
 3. Fill `.env.local`:
 
 ```bash
@@ -72,15 +74,33 @@ Public API responses include short CDN cache headers. The map bundle is dynamica
 
 The ingestion route:
 
-1. Fetches official public-health sources where accessible.
-2. Queries GDELT for `hantavirus`, `Andes virus`, `hantavirus outbreak`, and `hantavirus cruise ship`.
-3. Normalizes candidates into reports.
-4. Detects confirmed, suspected, deaths, or monitoring status from source text.
-5. Assigns confidence: official is high, reputable news is medium, social/ambiguous is low.
-6. Deduplicates by generated `source_hash` and `source_url`.
-7. Inserts new reports and recalculates `daily_country_stats`.
+1. Fetches official public-health sources where accessible: WHO, CDC, and ECDC.
+2. Queries GDELT DOC 2.0 and Google News RSS for hantavirus, Andes virus, outbreak/case terms, and basic translated variants.
+3. Normalizes fetched records into `source_items`.
+4. Deduplicates by `source_url` and normalized title/domain/date `content_hash`.
+5. Filters for hantavirus relevance before processing.
+6. Extracts structured `extraction_candidates` with deterministic regex first.
+7. Optionally uses OpenAI JSON extraction when `OPENAI_API_KEY` is set.
+8. Assigns confidence: official is high, reputable news is medium, vague/social signals are low.
+9. Inserts reports only when confidence is high/medium and `should_affect_totals=true`.
+10. Keeps low-confidence or ambiguous candidates in `/admin/review`.
+11. Deduplicates events with `event_key` and updates a lower-confidence report if a better source appears.
+12. Recalculates `daily_country_stats`.
 
 Ambiguous reports become `monitoring` and do not affect confirmed totals. Low-confidence and social records are excluded from confirmed rollups.
+
+Review queue:
+
+```text
+/admin/review?password=ADMIN_PASSWORD
+```
+
+Review actions:
+
+- approve and add to reports
+- edit country, status, date, counts, confidence, and summary
+- ignore
+- mark duplicate
 
 ## Vercel Deploy
 

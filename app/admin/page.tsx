@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Trash2 } from "lucide-react";
 import { addReport, deleteReport, recalculateStats, updateReportConfidence } from "@/app/admin/actions";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,9 @@ export default async function AdminPage({ searchParams }: { searchParams: { pass
         <p className="mt-2 text-muted-foreground">
           Manual reports require source URLs. Admin mutations are {hasSupabaseEnv() ? "connected to Supabase" : "disabled until Supabase env vars are set"}.
         </p>
+        <Link className="mt-3 inline-flex text-sm text-primary hover:underline" href={`/admin/review?password=${encodeURIComponent(password)}`}>
+          Review ingestion candidates
+        </Link>
       </div>
       <div className="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <Card>
@@ -109,7 +113,7 @@ export default async function AdminPage({ searchParams }: { searchParams: { pass
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="font-medium">{report.country?.name} {report.status}</p>
-                    <p className="text-xs text-muted-foreground">{formatDate(report.report_date)} · {report.source_name}</p>
+                    <p className="text-xs text-muted-foreground">{formatDate(report.report_date)} - {report.source_name}</p>
                   </div>
                   <form action={deleteReport}>
                     <input name="password" type="hidden" value={password} />

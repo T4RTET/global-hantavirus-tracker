@@ -1,7 +1,7 @@
 import { unstable_noStore as noStore } from "next/cache";
 import { demoCountries, demoDailyStats, demoReports } from "@/lib/sample-data";
 import { getSupabaseService, hasSupabaseEnv } from "@/lib/supabase";
-import type { CountryStats, DailyCountryStat, GlobalStats, Report, ReportStatus } from "@/lib/types";
+import type { CountryStats, DailyCountryStat, ExtractionCandidate, GlobalStats, Report, ReportStatus } from "@/lib/types";
 
 function withCountry(report: Report): Report {
   return report.country ? report : { ...report, country: demoCountries.find((country) => country.id === report.country_id) };
@@ -75,6 +75,19 @@ export async function getCountries() {
   const { data, error } = await getSupabaseService().from("countries").select("*").order("name");
   if (error) throw error;
   return data ?? [];
+}
+
+export async function getReviewCandidates(limit = 50): Promise<ExtractionCandidate[]> {
+  if (!hasSupabaseEnv()) return [];
+
+  const { data, error } = await getSupabaseService()
+    .from("extraction_candidates")
+    .select("*, source_item:source_items(*)")
+    .eq("needs_review", true)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []) as ExtractionCandidate[];
 }
 
 export async function getGlobalStats(): Promise<GlobalStats> {
