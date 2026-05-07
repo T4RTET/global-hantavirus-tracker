@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import Link from "next/link";
-import { Activity, Database, Radiation } from "lucide-react";
+import { Activity, Database } from "lucide-react";
 import "./globals.css";
 
 const sans = Inter({ subsets: ["latin"], variable: "--font-geist-sans" });
@@ -32,6 +32,7 @@ export const metadata: Metadata = {
 const links = [
   { href: "/", label: "Dashboard" },
   { href: "/latest", label: "Latest" },
+  { href: "/x-news", label: "X News" },
   { href: "/hantavirus", label: "Hantavirus" },
   { href: "/about", label: "Methodology" },
   { href: "/admin", label: "Admin" }
@@ -44,8 +45,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <header className="sticky top-0 z-50 border-b border-red-950/70 bg-black/88 backdrop-blur-xl">
           <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
             <Link className="flex items-center gap-2 font-semibold uppercase tracking-[0.16em]" href="/">
-              <span className="grid h-9 w-9 place-items-center rounded-md border border-red-400/40 bg-red-950/70 text-red-100 shadow-[0_0_24px_rgba(239,68,68,0.25)]">
-                <Radiation className="h-5 w-5" />
+              <span className="grid h-9 w-9 place-items-center overflow-hidden rounded-md border border-yellow-300/50 bg-yellow-400 shadow-[0_0_24px_rgba(250,204,21,0.24)]">
+                <img alt="" className="h-full w-full object-cover" src="/icon.svg" />
               </span>
               <span className="hidden sm:inline text-red-100">Global Hantavirus Tracker</span>
             </Link>

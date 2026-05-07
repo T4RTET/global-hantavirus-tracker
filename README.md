@@ -55,6 +55,7 @@ select recalculate_daily_country_stats();
 - `/` dashboard with map, KPI cards, ticker, table, timeline, sources, FAQ, disclaimer
 - `/country/[slug]` country-specific SEO page
 - `/latest` report feed with status filters
+- `/x-news` imported popular X/Twitter posts for review
 - `/about` methodology and source priority
 - `/admin?password=...` manual MVP admin
 - `/hantavirus` neutral educational overview
