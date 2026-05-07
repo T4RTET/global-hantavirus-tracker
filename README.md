@@ -75,7 +75,7 @@ Public API responses include short CDN cache headers. The map bundle is dynamica
 The ingestion route:
 
 1. Fetches official public-health sources where accessible: WHO, CDC, and ECDC.
-2. Queries GDELT DOC 2.0 and Google News RSS for hantavirus, Andes virus, outbreak/case terms, and basic translated variants.
+2. Queries GDELT DOC 2.0, Google News RSS, and optional X/Twitter recent search for hantavirus, Andes virus, outbreak/case terms, and basic translated variants.
 3. Normalizes fetched records into `source_items`.
 4. Deduplicates by `source_url` and normalized title/domain/date `content_hash`.
 5. Filters for hantavirus relevance before processing.
@@ -88,6 +88,8 @@ The ingestion route:
 12. Recalculates `daily_country_stats`.
 
 Ambiguous reports become `monitoring` and do not affect confirmed totals. Low-confidence and social records are excluded from confirmed rollups.
+
+X/Twitter ingestion is enabled only when `X_BEARER_TOKEN` is set. Tweets are stored as `source_type=social`, assigned low confidence, and sent to `/admin/review`; they are useful for early signals and the news ticker but never update confirmed totals automatically.
 
 Review queue:
 

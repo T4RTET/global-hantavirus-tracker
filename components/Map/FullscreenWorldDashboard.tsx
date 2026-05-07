@@ -300,7 +300,7 @@ export function FullscreenWorldDashboard({
                 <li>WHO Disease Outbreak News</li>
                 <li>CDC hantavirus pages and feeds</li>
                 <li>ECDC updates</li>
-                <li>GDELT DOC 2.0 and Google News RSS</li>
+                <li>GDELT DOC 2.0, Google News RSS, and X/Twitter social signals</li>
                 <li>Manual admin review for low-confidence candidates</li>
               </ul>
             </div>
