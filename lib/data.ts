@@ -7,6 +7,20 @@ function withCountry(report: Report): Report {
   return report.country ? report : { ...report, country: demoCountries.find((country) => country.id === report.country_id) };
 }
 
+function getDemoReports(options: {
+  country?: string;
+  status?: ReportStatus | "all";
+  limit?: number;
+} = {}) {
+  const limit = options.limit ?? 50;
+  return demoReports
+    .map(withCountry)
+    .filter((report) => !options.country || report.country?.slug === options.country)
+    .filter((report) => !options.status || options.status === "all" || report.status === options.status)
+    .sort((a, b) => Date.parse(b.report_date) - Date.parse(a.report_date))
+    .slice(0, limit);
+}
+
 function getDemoCountryStats(): CountryStats[] {
   return demoCountries
     .map((country) => {
@@ -33,12 +47,7 @@ export async function getReports(options: {
 } = {}): Promise<Report[]> {
   const limit = options.limit ?? 50;
   if (!hasSupabaseEnv()) {
-    return demoReports
-      .map(withCountry)
-      .filter((report) => !options.country || report.country?.slug === options.country)
-      .filter((report) => !options.status || options.status === "all" || report.status === options.status)
-      .sort((a, b) => Date.parse(b.report_date) - Date.parse(a.report_date))
-      .slice(0, limit);
+    return getDemoReports(options);
   }
 
   const supabase = getSupabaseService();
@@ -57,7 +66,8 @@ export async function getReports(options: {
 
   const { data, error } = await query;
   if (error) throw error;
-  return (data ?? []) as Report[];
+  const reports = (data ?? []) as Report[];
+  return reports.length > 0 ? reports : getDemoReports(options);
 }
 
 export async function getCountryStats(): Promise<CountryStats[]> {
@@ -66,7 +76,9 @@ export async function getCountryStats(): Promise<CountryStats[]> {
   const supabase = getSupabaseService();
   const { data, error } = await supabase.from("country_rollups").select("*").order("confirmed", { ascending: false });
   if (error) throw error;
-  return (data ?? []) as CountryStats[];
+  const countryStats = (data ?? []) as CountryStats[];
+  const hasReportStats = countryStats.some((country) => country.confirmed + country.suspected + country.deaths > 0);
+  return hasReportStats ? countryStats : getDemoCountryStats();
 }
 
 export async function getCountries() {
@@ -74,7 +86,7 @@ export async function getCountries() {
 
   const { data, error } = await getSupabaseService().from("countries").select("*").order("name");
   if (error) throw error;
-  return data ?? [];
+  return data?.length ? data : demoCountries;
 }
 
 export async function getReviewCandidates(limit = 50): Promise<ExtractionCandidate[]> {
@@ -110,7 +122,10 @@ export async function getCountryBySlug(slug: string) {
 
   const supabase = getSupabaseService();
   const { data, error } = await supabase.from("country_rollups").select("*").eq("slug", slug).single();
-  if (error) return null;
+  if (error) return getDemoCountryStats().find((country) => country.slug === slug) ?? null;
+  if (!data || Number(data.confirmed ?? 0) + Number(data.suspected ?? 0) + Number(data.deaths ?? 0) === 0) {
+    return getDemoCountryStats().find((country) => country.slug === slug) ?? null;
+  }
   return data as CountryStats;
 }
 
@@ -130,7 +145,12 @@ export async function getDailyStats(countrySlug?: string): Promise<DailyCountryS
   }
   const { data, error } = await query;
   if (error) throw error;
-  return (data ?? []) as DailyCountryStat[];
+  const stats = (data ?? []) as DailyCountryStat[];
+  return stats.length > 0
+    ? stats
+    : demoDailyStats
+      .filter((stat) => !countrySlug || stat.country?.slug === countrySlug)
+      .sort((a, b) => a.date.localeCompare(b.date));
 }
 
 export function markDynamic() {
