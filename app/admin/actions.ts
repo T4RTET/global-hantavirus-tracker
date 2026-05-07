@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { seedSupabaseDatabase } from "@/lib/seed-database";
 import { getSupabaseService, hasSupabaseEnv } from "@/lib/supabase";
 import type { CandidateStatus, Confidence, ReportStatus, SourceType } from "@/lib/types";
 import { importPopularXPosts } from "@/lib/x-popular";
@@ -75,6 +76,25 @@ export async function recalculateStats(formData: FormData) {
   if (error) throw error;
   revalidatePath("/");
   revalidatePath("/latest");
+}
+
+export async function seedDatabase(formData: FormData) {
+  const password = String(formData.get("password") ?? "");
+  const params = new URLSearchParams();
+  if (password) params.set("password", password);
+
+  try {
+    requirePassword(formData);
+    const result = await seedSupabaseDatabase();
+    revalidatePath("/");
+    revalidatePath("/latest");
+    revalidatePath("/sitemap.xml");
+    params.set("seed_status", `Seed complete: ${result.countries} countries and ${result.reports} reports.`);
+  } catch (error) {
+    params.set("seed_error", error instanceof Error ? error.message : "Seed failed.");
+  }
+
+  redirect(`/admin?${params.toString()}`);
 }
 
 export async function importXPosts(formData: FormData) {

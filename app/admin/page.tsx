@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { MessageCircle, Trash2 } from "lucide-react";
-import { addReport, deleteReport, importXPosts, recalculateStats, updateReportConfidence } from "@/app/admin/actions";
+import { Database, MessageCircle, Trash2 } from "lucide-react";
+import { addReport, deleteReport, importXPosts, recalculateStats, seedDatabase, updateReportConfidence } from "@/app/admin/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,7 +19,11 @@ const statuses = ["confirmed", "suspected", "death", "monitoring", "recovered", 
 const confidences = ["high", "medium", "low"];
 const sourceTypes = ["official", "news", "social", "manual"];
 
-export default async function AdminPage({ searchParams }: { searchParams: { password?: string; x_status?: string; x_error?: string } }) {
+export default async function AdminPage({
+  searchParams
+}: {
+  searchParams: { password?: string; x_status?: string; x_error?: string; seed_status?: string; seed_error?: string };
+}) {
   const password = searchParams.password ?? "";
   const isUnlocked = Boolean(process.env.ADMIN_PASSWORD && password === process.env.ADMIN_PASSWORD);
 
@@ -78,6 +82,16 @@ export default async function AdminPage({ searchParams }: { searchParams: { pass
           X import failed: {searchParams.x_error}
         </div>
       ) : null}
+      {searchParams.seed_status ? (
+        <div className="mb-6 rounded-md border border-emerald-900/70 bg-emerald-950/20 p-4 text-sm text-emerald-100">
+          {searchParams.seed_status}
+        </div>
+      ) : null}
+      {searchParams.seed_error ? (
+        <div className="mb-6 rounded-md border border-red-900/70 bg-red-950/20 p-4 text-sm text-red-100">
+          Seed failed: {searchParams.seed_error}
+        </div>
+      ) : null}
       <div className="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <Card>
           <CardHeader>
@@ -98,6 +112,17 @@ export default async function AdminPage({ searchParams }: { searchParams: { pass
                 <Input name="min_views" defaultValue="100000" min="1" type="number" />
                 <Button disabled={!hasSupabaseEnv()} type="submit" variant="secondary">Parse X</Button>
               </div>
+            </form>
+            <form action={seedDatabase} className="mb-5 rounded-md border border-red-900/60 bg-black/40 p-4">
+              <input name="password" type="hidden" value={password} />
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Database className="h-4 w-4 text-red-300" />
+                Seed database
+              </div>
+              <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                Adds all world countries, demo highlight reports, and recalculates dashboard stats.
+              </p>
+              <Button className="mt-3" disabled={!hasSupabaseEnv()} type="submit" variant="secondary">Run seed</Button>
             </form>
             <form action={addReport} className="grid gap-4">
               <input name="password" type="hidden" value={password} />
