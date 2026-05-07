@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --background: 220 24% 6%;
+  --foreground: 210 20% 96%;
+  --card: 220 18% 10%;
+  --card-foreground: 210 20% 96%;
+  --popover: 220 18% 9%;
+  --popover-foreground: 210 20% 96%;
+  --primary: 174 72% 45%;
+  --primary-foreground: 180 100% 8%;
+  --secondary: 222 16% 16%;
+  --secondary-foreground: 210 20% 94%;
+  --muted: 220 14% 16%;
+  --muted-foreground: 216 12% 66%;
+  --accent: 207 84% 52%;
+  --accent-foreground: 210 20% 98%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 210 20% 98%;
+  --border: 220 13% 20%;
+  --input: 220 13% 20%;
+  --ring: 174 72% 45%;
+  --radius: 0.5rem;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(45, 212, 191, 0.16), transparent 28rem),
+    radial-gradient(circle at 86% 8%, rgba(56, 189, 248, 0.12), transparent 30rem),
+    hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+a {
+  color: inherit;
+}
+
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  background: #071014;
+  font-family: inherit;
+}
+
+.leaflet-control-attribution {
+  background: rgba(3, 7, 18, 0.72) !important;
+  color: rgba(226, 232, 240, 0.7) !important;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: #0b1220 !important;
+  color: #e5f3f1 !important;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.pulse-marker {
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  border: 2px solid rgba(204, 251, 241, 0.95);
+  background: rgb(20, 184, 166);
+  animation: pulseMarker 1.8s ease-out infinite;
+}
+
+@layer utilities {
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+}
