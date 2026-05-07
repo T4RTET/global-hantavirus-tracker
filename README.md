@@ -57,6 +57,7 @@ select recalculate_daily_country_stats();
 - `/latest` report feed with status filters
 - `/about` methodology and source priority
 - `/admin?password=...` manual MVP admin
+- `/hantavirus` neutral educational overview
 - `/api/og` dynamic social image
 - `/api/cron/ingest` protected ingestion route
 
@@ -101,6 +102,8 @@ Review actions:
 - edit country, status, date, counts, confidence, and summary
 - ignore
 - mark duplicate
+
+Admin can also import popular X posts by keyword. Set `X_BEARER_TOKEN`, open `/admin?password=ADMIN_PASSWORD`, and use the "Parse X" button. Imported posts are stored as low-confidence monitoring candidates and do not affect dashboard totals until reviewed.
 
 ## Vercel Deploy
 

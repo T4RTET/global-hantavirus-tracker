@@ -44,9 +44,7 @@ function getFeatures() {
 
 function countryTone(country?: CountryStats) {
   if (!country) return "fill-[#101614] stroke-[#223026]";
-  if (country.confirmed > 0) return "fill-red-700 stroke-red-200";
-  if (country.suspected > 0 || country.deaths > 0) return "fill-orange-600/80 stroke-orange-100/70";
-  return "fill-lime-700/45 stroke-lime-200/40";
+  return "fill-red-700 stroke-red-200";
 }
 
 function latestCountryReport(country: CountryStats | null, reports: Report[]) {
@@ -183,16 +181,6 @@ export function FullscreenWorldDashboard({
                       onMouseLeave={() => setHovered(null)}
                       strokeWidth={isSelected ? 1.6 : 0.5}
                     />
-                  );
-                })}
-                {countries.filter((country) => country.confirmed > 0).map((country) => {
-                  const point = projection([country.lng, country.lat]);
-                  if (!point) return null;
-                  return (
-                    <g key={`pulse-${country.id}`}>
-                      <circle cx={point[0]} cy={point[1]} r="6" className="fill-red-300" />
-                      <circle cx={point[0]} cy={point[1]} r="18" className="animate-pulse fill-none stroke-red-300/80" strokeWidth="2" />
-                    </g>
                   );
                 })}
               </svg>

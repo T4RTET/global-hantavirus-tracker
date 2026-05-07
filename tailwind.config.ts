@@ -41,7 +41,7 @@ const config: Config = {
       },
       animation: {
         pulseMarker: "pulseMarker 1.8s ease-out infinite",
-        ticker: "ticker 28s linear infinite"
+        ticker: "ticker 64s linear infinite"
       },
       keyframes: {
         pulseMarker: {

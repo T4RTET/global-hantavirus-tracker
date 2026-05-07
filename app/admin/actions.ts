@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getSupabaseService, hasSupabaseEnv } from "@/lib/supabase";
 import type { CandidateStatus, Confidence, ReportStatus, SourceType } from "@/lib/types";
+import { importPopularXPosts } from "@/lib/x-popular";
 
 function requirePassword(formData: FormData) {
   const configured = process.env.ADMIN_PASSWORD;
@@ -73,6 +74,14 @@ export async function recalculateStats(formData: FormData) {
   if (error) throw error;
   revalidatePath("/");
   revalidatePath("/latest");
+}
+
+export async function importXPosts(formData: FormData) {
+  requirePassword(formData);
+  const keyword = String(formData.get("keyword") || "hantavirus");
+  const minViews = Number(formData.get("min_views") || 100000);
+  await importPopularXPosts(keyword, minViews);
+  revalidatePath("/admin/review");
 }
 
 function reportStatus(status: CandidateStatus): ReportStatus | null {

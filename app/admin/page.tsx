@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Trash2 } from "lucide-react";
-import { addReport, deleteReport, recalculateStats, updateReportConfidence } from "@/app/admin/actions";
+import { MessageCircle, Trash2 } from "lucide-react";
+import { addReport, deleteReport, importXPosts, recalculateStats, updateReportConfidence } from "@/app/admin/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -58,6 +58,21 @@ export default async function AdminPage({ searchParams }: { searchParams: { pass
             <CardTitle>Add manual report</CardTitle>
           </CardHeader>
           <CardContent>
+            <form action={importXPosts} className="mb-5 rounded-md border border-red-900/60 bg-black/40 p-4">
+              <input name="password" type="hidden" value={password} />
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <MessageCircle className="h-4 w-4 text-red-300" />
+                Import popular X posts
+              </div>
+              <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                Searches X for `hantavirus`, keeps posts with 100k+ views, and sends them to review as low-confidence monitoring signals.
+              </p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_120px_auto]">
+                <Input name="keyword" defaultValue="hantavirus" />
+                <Input name="min_views" defaultValue="100000" min="1" type="number" />
+                <Button disabled={!hasSupabaseEnv()} type="submit" variant="secondary">Parse X</Button>
+              </div>
+            </form>
             <form action={addReport} className="grid gap-4">
               <input name="password" type="hidden" value={password} />
               <label className="grid gap-2 text-sm">
