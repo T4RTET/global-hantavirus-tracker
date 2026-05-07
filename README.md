@@ -108,7 +108,7 @@ Review actions:
 2. Import the project in Vercel.
 3. Set all env vars from `.env.example`.
 4. Deploy.
-5. Vercel reads `vercel.json` and calls `/api/cron/ingest` every 30 minutes.
+5. Vercel reads `vercel.json` and calls `/api/cron/ingest` daily on Hobby accounts. Use Vercel Pro or an external cron service for 15-60 minute ingestion.
 
 For custom cron, send:
 
