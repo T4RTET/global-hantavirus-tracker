@@ -18,6 +18,7 @@ import type { CountryStats, DailyCountryStat, GlobalStats, Report } from "@/lib/
 import { cn, formatDate, formatNumber } from "@/lib/utils";
 
 type PanelMode = "country" | "stats" | "updates" | "table" | "timeline" | "sources";
+type CountryTone = "none" | "confirmed" | "monitoring";
 
 type GeometryFeature = {
   type: "Feature";
@@ -52,9 +53,10 @@ const worldPaths = getFeatures().map((geo) => {
   };
 });
 
-function countryTone(country?: CountryStats) {
-  if (!country) return "fill-[#101614] stroke-[#223026]";
-  return "fill-red-700 stroke-red-200";
+function countryTone(tone: CountryTone) {
+  if (tone === "confirmed") return "fill-red-700 stroke-red-200";
+  if (tone === "monitoring") return "fill-yellow-500/80 stroke-yellow-100";
+  return "fill-[#101614] stroke-[#223026]";
 }
 
 function latestCountryReport(country: CountryStats | null, reports: Report[]) {
@@ -82,6 +84,21 @@ export function FullscreenWorldDashboard({
   const selectedCountry = countries.find((country) => country.slug === selectedSlug) ?? null;
   const activeCountry = hovered ?? selectedCountry;
   const countryReports = latestCountryReport(selectedCountry, reports);
+  const reportToneByIso3 = useMemo(() => {
+    const tones = new Map<string, CountryTone>();
+    for (const report of reports) {
+      const iso3 = report.country?.iso3;
+      if (!iso3) continue;
+      const isCountable = report.source_type !== "social" && report.confidence !== "low";
+      const isConfirmed = isCountable && ((report.status === "confirmed" && report.case_count > 0) || (report.status === "death" && report.death_count > 0));
+      if (isConfirmed) {
+        tones.set(iso3, "confirmed");
+      } else if (!tones.has(iso3)) {
+        tones.set(iso3, "monitoring");
+      }
+    }
+    return tones;
+  }, [reports]);
 
   const openPanel = useCallback((nextMode: PanelMode, slug?: string) => {
     setMode(nextMode);
@@ -130,8 +147,8 @@ export function FullscreenWorldDashboard({
             <HudPanel title="Pathogen overlay">
               <div className="space-y-3 text-sm">
                 <span className="flex items-center gap-2"><i className="h-3 w-5 rounded-sm bg-red-700 shadow-[0_0_12px_rgba(239,68,68,0.7)]" /> Confirmed zone</span>
-                <span className="flex items-center gap-2"><i className="h-3 w-5 rounded-sm bg-orange-600" /> Suspected signal</span>
-                <span className="flex items-center gap-2"><i className="h-3 w-5 rounded-sm bg-lime-700/70" /> Monitoring watch</span>
+                <span className="flex items-center gap-2"><i className="h-3 w-5 rounded-sm bg-yellow-500" /> Possible / monitoring</span>
+                <span className="flex items-center gap-2"><i className="h-3 w-5 rounded-sm bg-[#101614] ring-1 ring-red-950" /> No active signal</span>
               </div>
             </HudPanel>
             <HudPanel title="Disclaimer">
@@ -170,6 +187,11 @@ export function FullscreenWorldDashboard({
                 </g>
                 {worldPaths.map((geo) => {
                   const country = geo.iso3 ? byIso3.get(geo.iso3) : undefined;
+                  const tone = country && (country.confirmed > 0 || country.deaths > 0)
+                    ? "confirmed"
+                    : geo.iso3
+                      ? reportToneByIso3.get(geo.iso3) ?? "none"
+                      : "none";
                   return (
                     <MapCountryPath
                       country={country}
@@ -178,6 +200,7 @@ export function FullscreenWorldDashboard({
                       key={geo.key}
                       onHover={handleCountryHover}
                       onSelect={openPanel}
+                      tone={tone}
                     />
                   );
                 })}
@@ -344,21 +367,24 @@ const MapCountryPath = memo(function MapCountryPath({
   d,
   isSelected,
   onHover,
-  onSelect
+  onSelect,
+  tone
 }: {
   country?: CountryStats;
   d: string;
   isSelected: boolean;
   onHover: (country: CountryStats | null) => void;
   onSelect: (mode: PanelMode, slug?: string) => void;
+  tone: CountryTone;
 }) {
+  const isInteractive = Boolean(country && tone !== "none");
   const handleClick = useCallback(() => {
-    if (country) onSelect("country", country.slug);
-  }, [country, onSelect]);
+    if (isInteractive && country) onSelect("country", country.slug);
+  }, [country, isInteractive, onSelect]);
 
   const handleMouseEnter = useCallback(() => {
-    onHover(country ?? null);
-  }, [country, onHover]);
+    onHover(isInteractive ? country ?? null : null);
+  }, [country, isInteractive, onHover]);
 
   const handleMouseLeave = useCallback(() => {
     onHover(null);
@@ -367,9 +393,9 @@ const MapCountryPath = memo(function MapCountryPath({
   return (
     <path
       className={cn(
-        country ? "cursor-pointer hover:fill-red-300" : "pointer-events-none",
+        isInteractive ? "cursor-pointer hover:fill-red-300" : "pointer-events-none",
         "transition-colors duration-150",
-        countryTone(country),
+        countryTone(tone),
         isSelected && "stroke-white fill-red-500"
       )}
       d={d}
