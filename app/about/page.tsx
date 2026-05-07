@@ -20,7 +20,7 @@ export default function AboutPage() {
             <CardTitle>Source priority</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm leading-6 text-muted-foreground">
-            <p>Official public health sources are confidence high. Reputable news sources default to medium. X/Twitter, social, or ambiguous signals default to low and require review.</p>
+            <p>Official public health sources are confidence high. Reputable news sources default to medium. Social or ambiguous signals default to low and monitoring.</p>
             <p>Each report must include a source_url. Ingestion deduplicates by source URL and normalized title hash.</p>
           </CardContent>
         </Card>

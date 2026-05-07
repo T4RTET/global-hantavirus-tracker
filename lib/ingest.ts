@@ -40,26 +40,6 @@ type GdeltArticle = {
   language?: string;
 };
 
-type XUser = {
-  id: string;
-  name?: string;
-  username?: string;
-  verified?: boolean;
-};
-
-type XTweet = {
-  id: string;
-  text: string;
-  created_at?: string;
-  author_id?: string;
-  lang?: string;
-};
-
-type XRecentSearchResponse = {
-  data?: XTweet[];
-  includes?: { users?: XUser[] };
-};
-
 const searchQueries = [
   "hantavirus",
   "\"hantavirus outbreak\"",
@@ -317,54 +297,6 @@ export async function fetchEcdcFeeds(): Promise<NormalizedSourceItem[]> {
   return uniqueItems(items);
 }
 
-export async function fetchTwitterReports(): Promise<NormalizedSourceItem[]> {
-  const token = process.env.X_BEARER_TOKEN;
-  if (!token) return [];
-
-  const query = [
-    "(hantavirus OR \"hanta virus\" OR \"Andes virus\" OR \"virus hanta\" OR \"hantavirus cases\" OR \"hantavirus outbreak\" OR \"hantavirus pulmonary syndrome\")",
-    "-is:retweet"
-  ].join(" ");
-  const params = new URLSearchParams({
-    query,
-    max_results: "50",
-    "tweet.fields": "created_at,lang,author_id",
-    expansions: "author_id",
-    "user.fields": "username,name,verified"
-  });
-
-  const response = await fetch(`https://api.twitter.com/2/tweets/search/recent?${params.toString()}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "User-Agent": "GlobalHantavirusTracker/0.2 (+https://github.com/T4RTET/global-hantavirus-tracker)"
-    },
-    next: { revalidate: 900 }
-  });
-  if (!response.ok) throw new Error(`X recent search returned ${response.status}`);
-
-  const payload = (await response.json()) as XRecentSearchResponse;
-  const users = new Map((payload.includes?.users ?? []).map((user) => [user.id, user]));
-
-  return uniqueItems(
-    (payload.data ?? [])
-      .map((tweet) => {
-        const user = tweet.author_id ? users.get(tweet.author_id) : null;
-        const username = user?.username;
-        const sourceUrl = username ? `https://x.com/${username}/status/${tweet.id}` : `https://x.com/i/web/status/${tweet.id}`;
-        const sourceName = username ? `X / @${username}` : "X / Twitter";
-        return normalizeSourceItem({
-          source_name: sourceName,
-          source_url: sourceUrl,
-          source_type: "social",
-          raw_title: tweet.text.slice(0, 180),
-          raw_text: tweet.text,
-          published_at: tweet.created_at ?? null
-        });
-      })
-      .filter(Boolean) as NormalizedSourceItem[]
-  );
-}
-
 async function loadCountries(): Promise<Country[]> {
   const { data, error } = await getSupabaseService().from("countries").select("*");
   if (error) throw error;
@@ -419,7 +351,6 @@ function detectDate(text: string, fallback: string | null) {
 
 function sourceConfidence(item: NormalizedSourceItem, text: string): { confidence: Confidence; reason: string } {
   if (item.source_type === "official") return { confidence: "high", reason: "Official public health source." };
-  if (item.source_type === "social") return { confidence: "low", reason: "Social media signal; requires admin review." };
   if (/facebook|twitter|x\.com|telegram|reddit|tiktok/i.test(text)) {
     return { confidence: "low", reason: "Social or weakly sourced signal." };
   }
@@ -630,13 +561,7 @@ function reportStatusFromCandidate(status: CandidateStatus): ReportStatus | null
   return status;
 }
 
-async function createOrUpdateReport(
-  candidate: ExtractedReportData,
-  item: NormalizedSourceItem,
-  candidateId: string,
-  eventKey: string,
-  options: { keepReview?: boolean } = {}
-) {
+async function createOrUpdateReport(candidate: ExtractedReportData, item: NormalizedSourceItem, candidateId: string, eventKey: string) {
   const status = reportStatusFromCandidate(candidate.status);
   if (!status || !candidate.country_iso2) return null;
   const supabase = getSupabaseService();
@@ -684,10 +609,10 @@ async function createOrUpdateReport(
         .select("id")
         .single();
       if (error) throw error;
-      await supabase.from("extraction_candidates").update({ report_id: data.id, needs_review: options.keepReview ?? false }).eq("id", candidateId);
+      await supabase.from("extraction_candidates").update({ report_id: data.id, needs_review: false }).eq("id", candidateId);
       return data.id as string;
     }
-    await supabase.from("extraction_candidates").update({ report_id: existingByEvent.id, needs_review: options.keepReview ?? false }).eq("id", candidateId);
+    await supabase.from("extraction_candidates").update({ report_id: existingByEvent.id, needs_review: false }).eq("id", candidateId);
     return existingByEvent.id as string;
   }
 
@@ -703,13 +628,13 @@ async function createOrUpdateReport(
     .maybeSingle();
 
   if (existingSimilar) {
-    await supabase.from("extraction_candidates").update({ report_id: existingSimilar.id, needs_review: options.keepReview ?? false }).eq("id", candidateId);
+    await supabase.from("extraction_candidates").update({ report_id: existingSimilar.id, needs_review: false }).eq("id", candidateId);
     return existingSimilar.id as string;
   }
 
   const { data, error } = await supabase.from("reports").insert(reportPayload).select("id").single();
   if (error) throw error;
-  await supabase.from("extraction_candidates").update({ report_id: data.id, needs_review: options.keepReview ?? false }).eq("id", candidateId);
+  await supabase.from("extraction_candidates").update({ report_id: data.id, needs_review: false }).eq("id", candidateId);
   return data.id as string;
 }
 
@@ -758,22 +683,6 @@ async function processSourceItem(item: NormalizedSourceItem & { id: string }, co
     let reportId: string | null = null;
     if (extraction.is_relevant && extraction.should_affect_totals && extraction.confidence !== "low" && extraction.country_iso2) {
       reportId = await createOrUpdateReport(extraction, item, candidate.id, eventKey);
-    } else if (item.source_type === "social" && extraction.is_relevant && extraction.country_iso2) {
-      reportId = await createOrUpdateReport(
-        {
-          ...extraction,
-          status: "monitoring",
-          confirmed_count: 0,
-          suspected_count: 0,
-          death_count: 0,
-          should_affect_totals: false,
-          summary: extraction.summary || item.raw_title
-        },
-        item,
-        candidate.id,
-        sha256(`${eventKey}|${item.source_url}`),
-        { keepReview: true }
-      );
     }
 
     await supabase
@@ -797,8 +706,7 @@ async function fetchAllSources() {
     fetchGoogleNewsRss(),
     fetchWhoDiseaseOutbreakNews(),
     fetchCdcFeeds(),
-    fetchEcdcFeeds(),
-    fetchTwitterReports()
+    fetchEcdcFeeds()
   ]);
   const items = results.flatMap((result) => (result.status === "fulfilled" ? result.value : []));
   const errors = results
@@ -816,7 +724,7 @@ export async function runIngestion() {
   const startedAt = new Date().toISOString();
   const runInsert = await supabase
     .from("ingestion_runs")
-    .insert({ source: "official+gdelt+google-news+x", status: "partial", started_at: startedAt, items_found: 0, items_inserted: 0 })
+    .insert({ source: "official+gdelt+google-news", status: "partial", started_at: startedAt, items_found: 0, items_inserted: 0 })
     .select("id")
     .single();
 

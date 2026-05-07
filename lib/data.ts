@@ -14,17 +14,11 @@ function getDemoCountryStats(): CountryStats[] {
       return {
         ...country,
         confirmed: reports.reduce(
-          (sum, report) => sum + (report.status === "confirmed" && report.source_type !== "social" && report.confidence !== "low" ? report.case_count : 0),
+          (sum, report) => sum + (report.source_type !== "social" && report.confidence !== "low" ? report.case_count : 0),
           0
         ),
-        suspected: reports.reduce(
-          (sum, report) => sum + (report.status === "suspected" && report.source_type !== "social" && report.confidence !== "low" ? report.suspected_count : 0),
-          0
-        ),
-        deaths: reports.reduce(
-          (sum, report) => sum + (report.status === "death" && report.source_type !== "social" && report.confidence !== "low" ? report.death_count : 0),
-          0
-        ),
+        suspected: reports.reduce((sum, report) => sum + report.suspected_count, 0),
+        deaths: reports.reduce((sum, report) => sum + report.death_count, 0),
         last_report: reports.map((report) => report.report_date).sort().at(-1) ?? null,
         source_url: reports.at(-1)?.source_url ?? null
       };

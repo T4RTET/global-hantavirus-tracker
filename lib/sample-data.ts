@@ -198,13 +198,9 @@ export const demoDailyStats: DailyCountryStat[] = demoCountries.flatMap((country
   let suspected = 0;
   let deaths = 0;
   return reports.map((report) => {
-    const countsForTotals = report.source_type !== "social" && report.confidence !== "low";
-    const newConfirmed = countsForTotals && report.status === "confirmed" ? report.case_count : 0;
-    const newSuspected = countsForTotals && report.status === "suspected" ? report.suspected_count : 0;
-    const newDeaths = countsForTotals && report.status === "death" ? report.death_count : 0;
-    confirmed += newConfirmed;
-    suspected += newSuspected;
-    deaths += newDeaths;
+    confirmed += report.case_count;
+    suspected += report.suspected_count;
+    deaths += report.death_count;
     return {
       id: `stat-${report.id}`,
       country_id: country.id,
@@ -213,9 +209,9 @@ export const demoDailyStats: DailyCountryStat[] = demoCountries.flatMap((country
       confirmed_total: confirmed,
       suspected_total: suspected,
       deaths_total: deaths,
-      new_confirmed: newConfirmed,
-      new_suspected: newSuspected,
-      new_deaths: newDeaths,
+      new_confirmed: report.case_count,
+      new_suspected: report.suspected_count,
+      new_deaths: report.death_count,
       created_at: now
     };
   });
