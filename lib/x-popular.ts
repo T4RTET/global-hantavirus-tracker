@@ -61,7 +61,17 @@ export async function importPopularXPosts(keyword = "hantavirus", minViews = 100
     },
     cache: "no-store"
   });
-  if (!response.ok) throw new Error(`X recent search returned ${response.status}`);
+  if (!response.ok) {
+    let message = `X recent search returned ${response.status}`;
+    try {
+      const body = (await response.json()) as { title?: string; detail?: string; errors?: Array<{ message?: string }> };
+      const detail = body.detail || body.errors?.map((error) => error.message).filter(Boolean).join("; ") || body.title;
+      if (detail) message = `${message}: ${detail}`;
+    } catch {
+      // Keep the safe status-only message when X does not return JSON.
+    }
+    throw new Error(message);
+  }
 
   const payload = (await response.json()) as XRecentSearchResponse;
   const users = new Map((payload.includes?.users ?? []).map((user) => [user.id, user]));

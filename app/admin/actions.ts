@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { getSupabaseService, hasSupabaseEnv } from "@/lib/supabase";
 import type { CandidateStatus, Confidence, ReportStatus, SourceType } from "@/lib/types";
 import { importPopularXPosts } from "@/lib/x-popular";
@@ -77,12 +78,23 @@ export async function recalculateStats(formData: FormData) {
 }
 
 export async function importXPosts(formData: FormData) {
-  requirePassword(formData);
-  const keyword = String(formData.get("keyword") || "hantavirus");
-  const minViews = Number(formData.get("min_views") || 100000);
-  await importPopularXPosts(keyword, minViews);
-  revalidatePath("/admin/review");
-  revalidatePath("/x-news");
+  const password = String(formData.get("password") ?? "");
+  const params = new URLSearchParams();
+  if (password) params.set("password", password);
+
+  try {
+    requirePassword(formData);
+    const keyword = String(formData.get("keyword") || "hantavirus");
+    const minViews = Number(formData.get("min_views") || 100000);
+    const result = await importPopularXPosts(keyword, minViews);
+    revalidatePath("/admin/review");
+    revalidatePath("/x-news");
+    params.set("x_status", `X import complete: ${result.inserted} inserted from ${result.found} popular post(s).`);
+  } catch (error) {
+    params.set("x_error", error instanceof Error ? error.message : "X import failed.");
+  }
+
+  redirect(`/admin?${params.toString()}`);
 }
 
 function reportStatus(status: CandidateStatus): ReportStatus | null {

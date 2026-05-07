@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { getCountries, getReports } from "@/lib/data";
 import { hasSupabaseEnv } from "@/lib/supabase";
+import type { Country, Report } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -18,10 +19,9 @@ const statuses = ["confirmed", "suspected", "death", "monitoring", "recovered", 
 const confidences = ["high", "medium", "low"];
 const sourceTypes = ["official", "news", "social", "manual"];
 
-export default async function AdminPage({ searchParams }: { searchParams: { password?: string } }) {
+export default async function AdminPage({ searchParams }: { searchParams: { password?: string; x_status?: string; x_error?: string } }) {
   const password = searchParams.password ?? "";
   const isUnlocked = Boolean(process.env.ADMIN_PASSWORD && password === process.env.ADMIN_PASSWORD);
-  const [countries, reports] = await Promise.all([getCountries(), getReports({ limit: 25 })]);
 
   if (!isUnlocked) {
     return (
@@ -41,6 +41,17 @@ export default async function AdminPage({ searchParams }: { searchParams: { pass
     );
   }
 
+  let countries: Country[] = [];
+  let reports: Report[] = [];
+  let loadError: string | null = null;
+  try {
+    [countries, reports] = await Promise.all([getCountries(), getReports({ limit: 25 })]);
+  } catch (error) {
+    countries = [];
+    reports = [];
+    loadError = error instanceof Error ? error.message : "Failed to load admin data.";
+  }
+
   return (
     <main className="mx-auto max-w-7xl px-4 py-10">
       <div className="mb-8">
@@ -52,6 +63,21 @@ export default async function AdminPage({ searchParams }: { searchParams: { pass
           Review ingestion candidates
         </Link>
       </div>
+      {loadError ? (
+        <div className="mb-6 rounded-md border border-red-900/70 bg-red-950/20 p-4 text-sm text-red-100">
+          Admin data load failed: {loadError}
+        </div>
+      ) : null}
+      {searchParams.x_status ? (
+        <div className="mb-6 rounded-md border border-emerald-900/70 bg-emerald-950/20 p-4 text-sm text-emerald-100">
+          {searchParams.x_status}
+        </div>
+      ) : null}
+      {searchParams.x_error ? (
+        <div className="mb-6 rounded-md border border-red-900/70 bg-red-950/20 p-4 text-sm text-red-100">
+          X import failed: {searchParams.x_error}
+        </div>
+      ) : null}
       <div className="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <Card>
           <CardHeader>
