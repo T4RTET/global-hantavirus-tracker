@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCountryStats } from "@/lib/data";
 
 export const revalidate = 120;
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   return NextResponse.json(await getCountryStats(), {
