@@ -125,6 +125,23 @@ const demoReports = [
     confidence: "medium"
   },
   {
+    iso2: "FR",
+    location_name: "France",
+    lat: 46.2276,
+    lng: 2.2137,
+    status: "confirmed",
+    case_count: 1,
+    suspected_count: 0,
+    death_count: 0,
+    report_date: "2026-05-07T13:00:00.000Z",
+    raw_title: "Manual tracker entry: France hantavirus highlight",
+    summary: "Manual demo entry added to highlight France on the map. Replace with a verified source URL before production use.",
+    source_url: "https://example.com/seed-data#france",
+    source_name: "Manual tracker entry",
+    source_type: "manual",
+    confidence: "medium"
+  },
+  {
     iso2: "ZA",
     location_name: "Western Cape",
     lat: -33.9,

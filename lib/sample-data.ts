@@ -8,6 +8,7 @@ export const demoCountries: Country[] = [
   { id: "che", name: "Switzerland", iso2: "CH", iso3: "CHE", slug: "switzerland", lat: 46.8182, lng: 8.2275 },
   { id: "isr", name: "Israel", iso2: "IL", iso3: "ISR", slug: "israel", lat: 31.0461, lng: 34.8516 },
   { id: "nld", name: "Netherlands", iso2: "NL", iso3: "NLD", slug: "netherlands", lat: 52.1326, lng: 5.2913 },
+  { id: "fra", name: "France", iso2: "FR", iso3: "FRA", slug: "france", lat: 46.2276, lng: 2.2137 },
   { id: "zaf", name: "South Africa", iso2: "ZA", iso3: "ZAF", slug: "south-africa", lat: -30.5595, lng: 22.9375 },
   { id: "cpv", name: "Cabo Verde", iso2: "CV", iso3: "CPV", slug: "cabo-verde", lat: 16.5388, lng: -23.0418 },
   { id: "esp", name: "Spain", iso2: "ES", iso3: "ESP", slug: "spain", lat: 40.4637, lng: -3.7492 }
@@ -125,9 +126,31 @@ export const demoReports: Report[] = [
     updated_at: now
   },
   {
+    id: "seed-fra-1",
+    country_id: "fra",
+    country: demoCountries[5],
+    location_name: "France",
+    lat: 46.2276,
+    lng: 2.2137,
+    status: "confirmed",
+    case_count: 1,
+    death_count: 0,
+    suspected_count: 0,
+    report_date: "2026-05-07T13:00:00.000Z",
+    source_name: "Manual tracker entry",
+    source_url: "https://example.com/seed-data#france",
+    source_type: "manual",
+    confidence: "medium",
+    summary: "Manual demo entry added to highlight France on the map. Replace with a verified source URL before production use.",
+    raw_title: "Manual tracker entry: France hantavirus highlight",
+    raw_text: null,
+    created_at: now,
+    updated_at: now
+  },
+  {
     id: "seed-zaf-1",
     country_id: "zaf",
-    country: demoCountries[5],
+    country: demoCountries[6],
     location_name: "Western Cape",
     lat: -33.9,
     lng: 18.42,
@@ -149,7 +172,7 @@ export const demoReports: Report[] = [
   {
     id: "seed-cpv-1",
     country_id: "cpv",
-    country: demoCountries[6],
+    country: demoCountries[7],
     location_name: "Praia",
     lat: 14.933,
     lng: -23.513,
@@ -171,7 +194,7 @@ export const demoReports: Report[] = [
   {
     id: "seed-esp-1",
     country_id: "esp",
-    country: demoCountries[7],
+    country: demoCountries[8],
     location_name: "Canary Islands",
     lat: 28.2916,
     lng: -16.6291,
