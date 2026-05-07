@@ -38,6 +38,8 @@ async function getXItems(): Promise<XSourceItem[]> {
 }
 
 export default async function XNewsPage() {
+  const isDatabaseConnected = hasSupabaseEnv();
+  const isXConfigured = Boolean(process.env.X_BEARER_TOKEN);
   const items = await getXItems();
 
   return (
@@ -64,8 +66,20 @@ export default async function XNewsPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           {items.length === 0 ? (
-            <div className="rounded-md border border-dashed p-6 text-sm leading-6 text-muted-foreground">
-              No imported X posts yet. Add `X_BEARER_TOKEN` in Vercel/env, open `/admin`, and use the `Parse X` button with keyword `hantavirus` and minimum views `100000`.
+            <div className="space-y-4 rounded-md border border-dashed p-6 text-sm leading-6 text-muted-foreground">
+              <p className="font-medium text-foreground">No imported X posts yet.</p>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <StatusStep done={isDatabaseConnected} label="Supabase connected" />
+                <StatusStep done={isXConfigured} label="X token configured" />
+                <StatusStep done={false} label="Parse X run completed" />
+              </div>
+              <p>
+                To fill this page: set Supabase env vars and `X_BEARER_TOKEN` in Vercel, open `/admin?password=ADMIN_PASSWORD`,
+                then press `Parse X` with keyword `hantavirus` and minimum views `100000`.
+              </p>
+              <p>
+                Imported posts are social signals only. They stay out of confirmed totals until reviewed.
+              </p>
             </div>
           ) : (
             items.map((item) => (
@@ -86,5 +100,14 @@ export default async function XNewsPage() {
         </CardContent>
       </Card>
     </main>
+  );
+}
+
+function StatusStep({ done, label }: { done: boolean; label: string }) {
+  return (
+    <div className="rounded-md border border-red-950/70 bg-black/40 p-3">
+      <Badge variant={done ? "success" : "secondary"}>{done ? "ready" : "missing"}</Badge>
+      <p className="mt-2 text-xs text-muted-foreground">{label}</p>
+    </div>
   );
 }
