@@ -82,6 +82,7 @@ export async function importXPosts(formData: FormData) {
   const minViews = Number(formData.get("min_views") || 100000);
   await importPopularXPosts(keyword, minViews);
   revalidatePath("/admin/review");
+  revalidatePath("/x-news");
 }
 
 function reportStatus(status: CandidateStatus): ReportStatus | null {

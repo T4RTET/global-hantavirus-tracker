@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import Link from "next/link";
 import { Activity, Database } from "lucide-react";
@@ -46,11 +47,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
             <Link className="flex items-center gap-2 font-semibold uppercase tracking-[0.16em]" href="/">
               <span className="grid h-9 w-9 place-items-center overflow-hidden rounded-md border border-yellow-300/50 bg-yellow-400 shadow-[0_0_24px_rgba(250,204,21,0.24)]">
-                <img alt="" className="h-full w-full object-cover" src="/icon.svg" />
+                <Image alt="" className="h-full w-full object-cover" height={36} priority src="/icon.svg" width={36} />
               </span>
               <span className="hidden sm:inline text-red-100">Global Hantavirus Tracker</span>
             </Link>
-            <nav className="ml-auto flex items-center gap-1 text-sm text-muted-foreground">
+            <nav className="ml-auto flex min-w-0 items-center gap-1 overflow-x-auto text-sm text-muted-foreground">
               {links.map((link) => (
                 <Link className="rounded-md px-3 py-2 uppercase tracking-[0.12em] hover:bg-red-950/70 hover:text-red-100" href={link.href} key={link.href}>
                   {link.label}

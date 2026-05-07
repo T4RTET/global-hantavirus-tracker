@@ -1,12 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { geoNaturalEarth1, geoPath } from "d3-geo";
 import { feature } from "topojson-client";
 import type { Objects, Topology } from "topojson-specification";
 import world from "world-atlas/countries-110m.json";
 import worldCountries from "world-countries";
-import { Activity, AlertTriangle, BarChart3, Biohazard, Database, Info, PanelRightOpen, Radar, Search, Skull, Stethoscope, Table2, X } from "lucide-react";
+import { Activity, AlertTriangle, BarChart3, Database, Info, PanelRightOpen, Radar, Skull, Stethoscope, Table2, X } from "lucide-react";
 import { CountryTable } from "@/components/CountryTable";
 import { Disclaimer } from "@/components/Disclaimer";
 import { ReportsFeed } from "@/components/ReportsFeed";
@@ -36,11 +36,21 @@ const numericToIso3 = new Map(
 
 const projection = geoNaturalEarth1().fitSize([1000, 560], { type: "Sphere" });
 const path = geoPath(projection);
+const spherePath = path({ type: "Sphere" }) ?? "";
 
 function getFeatures() {
   const topology = world as unknown as WorldTopology;
   return (feature(topology, topology.objects.countries) as unknown as GeoJSON.FeatureCollection).features as GeometryFeature[];
 }
+
+const worldPaths = getFeatures().map((geo) => {
+  const iso3 = numericToIso3.get(String(geo.id).padStart(3, "0")) ?? null;
+  return {
+    d: path(geo) ?? "",
+    iso3,
+    key: `${geo.id}-${geo.properties.name ?? "country"}`
+  };
+});
 
 function countryTone(country?: CountryStats) {
   if (!country) return "fill-[#101614] stroke-[#223026]";
@@ -69,16 +79,19 @@ export function FullscreenWorldDashboard({
   const [hovered, setHovered] = useState<CountryStats | null>(null);
 
   const byIso3 = useMemo(() => new Map(countries.map((country) => [country.iso3, country])), [countries]);
-  const features = useMemo(getFeatures, []);
   const selectedCountry = countries.find((country) => country.slug === selectedSlug) ?? null;
   const activeCountry = hovered ?? selectedCountry;
   const countryReports = latestCountryReport(selectedCountry, reports);
 
-  function openPanel(nextMode: PanelMode, slug?: string) {
+  const openPanel = useCallback((nextMode: PanelMode, slug?: string) => {
     setMode(nextMode);
     if (slug) setSelectedSlug(slug);
     setPanelOpen(true);
-  }
+  }, []);
+
+  const handleCountryHover = useCallback((country: CountryStats | null) => {
+    setHovered((current) => (current?.slug === country?.slug ? current : country));
+  }, []);
 
   return (
     <main className="relative min-h-[calc(100vh-65px)] overflow-hidden bg-[#030504]">
@@ -139,13 +152,6 @@ export function FullscreenWorldDashboard({
                 viewBox="0 0 1000 560"
               >
                 <defs>
-                  <filter id="countryGlow" x="-30%" y="-30%" width="160%" height="160%">
-                    <feGaussianBlur stdDeviation="6" result="blur" />
-                    <feMerge>
-                      <feMergeNode in="blur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
                   <radialGradient id="oceanCore" cx="50%" cy="48%" r="62%">
                     <stop offset="0%" stopColor="#0b1611" />
                     <stop offset="65%" stopColor="#050908" />
@@ -153,7 +159,7 @@ export function FullscreenWorldDashboard({
                   </radialGradient>
                 </defs>
                 <rect width="1000" height="560" rx="18" fill="url(#oceanCore)" />
-                <path d={path({ type: "Sphere" }) ?? ""} className="fill-transparent stroke-red-950/70" />
+                <path d={spherePath} className="fill-transparent stroke-red-950/70" />
                 <g opacity="0.14">
                   {Array.from({ length: 9 }).map((_, index) => (
                     <path d={`M ${70 + index * 110} 38 L ${70 + index * 110} 522`} key={`grid-v-${index}`} stroke="#f87171" strokeWidth="0.6" />
@@ -162,24 +168,16 @@ export function FullscreenWorldDashboard({
                     <path d={`M 62 ${72 + index * 78} L 938 ${72 + index * 78}`} key={`grid-h-${index}`} stroke="#f87171" strokeWidth="0.6" />
                   ))}
                 </g>
-                {features.map((geo) => {
-                  const iso3 = numericToIso3.get(String(geo.id).padStart(3, "0"));
-                  const country = iso3 ? byIso3.get(iso3) : undefined;
-                  const isSelected = country?.slug === selectedSlug;
+                {worldPaths.map((geo) => {
+                  const country = geo.iso3 ? byIso3.get(geo.iso3) : undefined;
                   return (
-                    <path
-                      className={cn(
-                        "cursor-pointer transition-colors duration-200 hover:fill-red-300",
-                        countryTone(country),
-                        isSelected && "stroke-white fill-red-500"
-                      )}
-                      d={path(geo) ?? ""}
-                      filter={country?.confirmed ? "url(#countryGlow)" : undefined}
-                      key={`${geo.id}-${geo.properties.name}`}
-                      onClick={() => country && openPanel("country", country.slug)}
-                      onMouseEnter={() => setHovered(country ?? null)}
-                      onMouseLeave={() => setHovered(null)}
-                      strokeWidth={isSelected ? 1.6 : 0.5}
+                    <MapCountryPath
+                      country={country}
+                      d={geo.d}
+                      isSelected={country?.slug === selectedSlug}
+                      key={geo.key}
+                      onHover={handleCountryHover}
+                      onSelect={openPanel}
                     />
                   );
                 })}
@@ -329,7 +327,7 @@ function NewsTicker({ reports }: { reports: Report[] }) {
         <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-lime-200/70">Public health update stream</span>
       </div>
       <div className="relative h-10 overflow-hidden">
-        <div className="flex w-max animate-ticker gap-8 whitespace-nowrap px-3 py-2 font-mono text-xs uppercase tracking-[0.12em] text-red-100/80 hover:[animation-play-state:paused]">
+        <div className="ticker-track flex w-max animate-ticker gap-8 whitespace-nowrap px-3 py-2 font-mono text-xs uppercase tracking-[0.12em] text-red-100/80">
           {tickerItems.map((report, index) => (
             <span key={`${report.id}-${index}`}>
               <strong className="text-red-300">{report.country?.name ?? "Global"}</strong> / {report.status.replace("_", " ")} / {report.summary}
@@ -340,6 +338,48 @@ function NewsTicker({ reports }: { reports: Report[] }) {
     </div>
   );
 }
+
+const MapCountryPath = memo(function MapCountryPath({
+  country,
+  d,
+  isSelected,
+  onHover,
+  onSelect
+}: {
+  country?: CountryStats;
+  d: string;
+  isSelected: boolean;
+  onHover: (country: CountryStats | null) => void;
+  onSelect: (mode: PanelMode, slug?: string) => void;
+}) {
+  const handleClick = useCallback(() => {
+    if (country) onSelect("country", country.slug);
+  }, [country, onSelect]);
+
+  const handleMouseEnter = useCallback(() => {
+    onHover(country ?? null);
+  }, [country, onHover]);
+
+  const handleMouseLeave = useCallback(() => {
+    onHover(null);
+  }, [onHover]);
+
+  return (
+    <path
+      className={cn(
+        country ? "cursor-pointer hover:fill-red-300" : "pointer-events-none",
+        "transition-colors duration-150",
+        countryTone(country),
+        isSelected && "stroke-white fill-red-500"
+      )}
+      d={d}
+      onClick={handleClick}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      strokeWidth={isSelected ? 1.5 : 0.45}
+    />
+  );
+});
 
 function Metric({
   icon: Icon,
