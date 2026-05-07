@@ -329,7 +329,7 @@ function NewsTicker({ reports }: { reports: Report[] }) {
         <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-lime-200/70">Public health update stream</span>
       </div>
       <div className="relative h-10 overflow-hidden">
-        <div className="flex w-max animate-ticker gap-8 whitespace-nowrap px-3 py-2 font-mono text-xs uppercase tracking-[0.12em] text-red-100/80">
+        <div className="flex w-max animate-ticker gap-8 whitespace-nowrap px-3 py-2 font-mono text-xs uppercase tracking-[0.12em] text-red-100/80 hover:[animation-play-state:paused]">
           {tickerItems.map((report, index) => (
             <span key={`${report.id}-${index}`}>
               <strong className="text-red-300">{report.country?.name ?? "Global"}</strong> / {report.status.replace("_", " ")} / {report.summary}
