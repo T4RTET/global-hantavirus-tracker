@@ -7,17 +7,33 @@ function withCountry(report: Report): Report {
   return report.country ? report : { ...report, country: demoCountries.find((country) => country.id === report.country_id) };
 }
 
+function reportRank(report: Report) {
+  const sourceRank = report.source_type === "official" ? 0 : report.source_type === "news" ? 1 : report.source_type === "manual" ? 2 : 3;
+  const confidenceRank = report.confidence === "high" ? 0 : report.confidence === "medium" ? 1 : 2;
+  return sourceRank * 10 + confidenceRank;
+}
+
+function sortReports(reports: Report[]) {
+  return [...reports].sort((a, b) => {
+    const aManualWatch = a.source_type === "manual" && a.confidence === "low";
+    const bManualWatch = b.source_type === "manual" && b.confidence === "low";
+    if (aManualWatch !== bManualWatch) return aManualWatch ? 1 : -1;
+    const dateDelta = Date.parse(b.report_date) - Date.parse(a.report_date);
+    if (dateDelta !== 0) return dateDelta;
+    return reportRank(a) - reportRank(b);
+  });
+}
+
 function getDemoReports(options: {
   country?: string;
   status?: ReportStatus | "all";
   limit?: number;
 } = {}) {
   const limit = options.limit ?? 50;
-  return demoReports
+  return sortReports(demoReports
     .map(withCountry)
     .filter((report) => !options.country || report.country?.slug === options.country)
-    .filter((report) => !options.status || options.status === "all" || report.status === options.status)
-    .sort((a, b) => Date.parse(b.report_date) - Date.parse(a.report_date))
+    .filter((report) => !options.status || options.status === "all" || report.status === options.status))
     .slice(0, limit);
 }
 
@@ -61,7 +77,7 @@ export async function getReports(options: {
     .from("reports")
     .select("*, country:countries(*)")
     .order("report_date", { ascending: false })
-    .limit(limit);
+    .limit(Math.max(limit, 200));
 
   if (options.status && options.status !== "all") query = query.eq("status", options.status);
   if (options.country) {
@@ -73,7 +89,7 @@ export async function getReports(options: {
   const { data, error } = await query;
   if (error) throw error;
   const reports = (data ?? []) as Report[];
-  return reports.length > 0 ? reports : getDemoReports(options);
+  return reports.length > 0 ? sortReports(reports).slice(0, limit) : getDemoReports(options);
 }
 
 export async function getCountryStats(): Promise<CountryStats[]> {
