@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 import { seedSupabaseDatabase } from "@/lib/seed-database";
 import { getSupabaseService, hasSupabaseEnv } from "@/lib/supabase";
 import type { CandidateStatus, Confidence, ReportStatus, SourceType } from "@/lib/types";
-import { importPopularXPosts } from "@/lib/x-popular";
 
 function requirePassword(formData: FormData) {
   const configured = process.env.ADMIN_PASSWORD;
@@ -92,26 +91,6 @@ export async function seedDatabase(formData: FormData) {
     params.set("seed_status", `Seed complete: ${result.countries} countries and ${result.reports} reports.`);
   } catch (error) {
     params.set("seed_error", error instanceof Error ? error.message : "Seed failed.");
-  }
-
-  redirect(`/admin?${params.toString()}`);
-}
-
-export async function importXPosts(formData: FormData) {
-  const password = String(formData.get("password") ?? "");
-  const params = new URLSearchParams();
-  if (password) params.set("password", password);
-
-  try {
-    requirePassword(formData);
-    const keyword = String(formData.get("keyword") || "hantavirus");
-    const minViews = Number(formData.get("min_views") || 100000);
-    const result = await importPopularXPosts(keyword, minViews);
-    revalidatePath("/admin/review");
-    revalidatePath("/x-news");
-    params.set("x_status", `X import complete: ${result.inserted} inserted from ${result.found} popular post(s).`);
-  } catch (error) {
-    params.set("x_error", error instanceof Error ? error.message : "X import failed.");
   }
 
   redirect(`/admin?${params.toString()}`);

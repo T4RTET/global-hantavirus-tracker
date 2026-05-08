@@ -7,7 +7,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     { url: `${baseUrl}/`, changeFrequency: "hourly", priority: 1 },
     { url: `${baseUrl}/latest`, changeFrequency: "hourly", priority: 0.9 },
-    { url: `${baseUrl}/x-news`, changeFrequency: "hourly", priority: 0.7 },
     { url: `${baseUrl}/hantavirus`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${baseUrl}/about`, changeFrequency: "monthly", priority: 0.5 },
     ...countries.map((country) => ({

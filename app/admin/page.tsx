@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Database, MessageCircle, Trash2 } from "lucide-react";
-import { addReport, deleteReport, importXPosts, recalculateStats, seedDatabase, updateReportConfidence } from "@/app/admin/actions";
+import { Database, Trash2 } from "lucide-react";
+import { addReport, deleteReport, recalculateStats, seedDatabase, updateReportConfidence } from "@/app/admin/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,7 +22,7 @@ const sourceTypes = ["official", "news", "social", "manual"];
 export default async function AdminPage({
   searchParams
 }: {
-  searchParams: { password?: string; x_status?: string; x_error?: string; seed_status?: string; seed_error?: string };
+  searchParams: { password?: string; seed_status?: string; seed_error?: string };
 }) {
   const password = searchParams.password ?? "";
   const isUnlocked = Boolean(process.env.ADMIN_PASSWORD && password === process.env.ADMIN_PASSWORD);
@@ -72,16 +72,6 @@ export default async function AdminPage({
           Admin data load failed: {loadError}
         </div>
       ) : null}
-      {searchParams.x_status ? (
-        <div className="mb-6 rounded-md border border-emerald-900/70 bg-emerald-950/20 p-4 text-sm text-emerald-100">
-          {searchParams.x_status}
-        </div>
-      ) : null}
-      {searchParams.x_error ? (
-        <div className="mb-6 rounded-md border border-red-900/70 bg-red-950/20 p-4 text-sm text-red-100">
-          X import failed: {searchParams.x_error}
-        </div>
-      ) : null}
       {searchParams.seed_status ? (
         <div className="mb-6 rounded-md border border-emerald-900/70 bg-emerald-950/20 p-4 text-sm text-emerald-100">
           {searchParams.seed_status}
@@ -98,21 +88,6 @@ export default async function AdminPage({
             <CardTitle>Add manual report</CardTitle>
           </CardHeader>
           <CardContent>
-            <form action={importXPosts} className="mb-5 rounded-md border border-red-900/60 bg-black/40 p-4">
-              <input name="password" type="hidden" value={password} />
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <MessageCircle className="h-4 w-4 text-red-300" />
-                Import popular X posts
-              </div>
-              <p className="mt-2 text-xs leading-5 text-muted-foreground">
-                Searches X for `hantavirus`, keeps posts with 100k+ views, and sends them to review as low-confidence monitoring signals.
-              </p>
-              <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_120px_auto]">
-                <Input name="keyword" defaultValue="hantavirus" />
-                <Input name="min_views" defaultValue="100000" min="1" type="number" />
-                <Button disabled={!hasSupabaseEnv()} type="submit" variant="secondary">Parse X</Button>
-              </div>
-            </form>
             <form action={seedDatabase} className="mb-5 rounded-md border border-red-900/60 bg-black/40 p-4">
               <input name="password" type="hidden" value={password} />
               <div className="flex items-center gap-2 text-sm font-medium">

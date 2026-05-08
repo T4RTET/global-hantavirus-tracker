@@ -33,7 +33,6 @@ export const metadata: Metadata = {
 const links = [
   { href: "/", label: "Dashboard" },
   { href: "/latest", label: "Latest" },
-  { href: "/x-news", label: "X News" },
   { href: "/hantavirus", label: "Hantavirus" },
   { href: "/about", label: "Methodology" },
   { href: "/admin", label: "Admin" }

@@ -55,7 +55,6 @@ select recalculate_daily_country_stats();
 - `/` dashboard with map, KPI cards, ticker, table, timeline, sources, FAQ, disclaimer
 - `/country/[slug]` country-specific SEO page
 - `/latest` report feed with status filters
-- `/x-news` imported popular X/Twitter posts for review
 - `/about` methodology and source priority
 - `/admin?password=...` manual MVP admin
 - `/hantavirus` neutral educational overview
@@ -103,8 +102,6 @@ Review actions:
 - edit country, status, date, counts, confidence, and summary
 - ignore
 - mark duplicate
-
-Admin can also import popular X posts by keyword. Set `X_BEARER_TOKEN`, open `/admin?password=ADMIN_PASSWORD`, and use the "Parse X" button. Imported posts are stored as low-confidence monitoring candidates and do not affect dashboard totals until reviewed.
 
 ## Vercel Deploy
 
