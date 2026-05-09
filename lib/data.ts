@@ -127,7 +127,7 @@ export async function getReviewCandidates(limit = 50): Promise<ExtractionCandida
 export async function getGlobalStats(): Promise<GlobalStats> {
   const countryStats = await getCountryStats();
   const reports = await getReports({ limit: 200 });
-  const affected = countryStats.filter((country) => country.confirmed + country.suspected + country.deaths > 0);
+  const affected = countryStats.filter((country) => country.last_report || country.confirmed + country.suspected + country.deaths > 0);
 
   return {
     confirmed: countryStats.reduce((sum, country) => sum + country.confirmed, 0),
@@ -145,7 +145,8 @@ export async function getCountryBySlug(slug: string) {
   const supabase = getSupabaseService();
   const { data, error } = await supabase.from("country_rollups").select("*").eq("slug", slug).single();
   if (error) return getDemoCountryStats().find((country) => country.slug === slug) ?? null;
-  if (!data || Number(data.confirmed ?? 0) + Number(data.suspected ?? 0) + Number(data.deaths ?? 0) === 0) {
+  if (!data) return getDemoCountryStats().find((country) => country.slug === slug) ?? null;
+  if (!data.last_report && Number(data.confirmed ?? 0) + Number(data.suspected ?? 0) + Number(data.deaths ?? 0) === 0) {
     return getDemoCountryStats().find((country) => country.slug === slug) ?? null;
   }
   return data as CountryStats;
