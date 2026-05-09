@@ -3,6 +3,7 @@ import type { Country, DailyCountryStat, Report } from "@/lib/types";
 const now = "2026-05-09T10:00:00.000Z";
 const whoMay7Url = "https://www.who.int/news/item/07-05-2026-who-s-response-to-hantavirus-cases-linked-to-a-cruise-ship";
 const whoDon599Url = "https://www.who.int/emergencies/disease-outbreak-news/item/2026-DON599";
+const manualOverrideUrl = "https://github.com/T4RTET/global-hantavirus-tracker/pull/1#manual-300-case-override";
 
 export const demoCountries: Country[] = [
   { id: "arg", name: "Argentina", iso2: "AR", iso3: "ARG", slug: "argentina", lat: -38.4161, lng: -63.6167 },
@@ -75,6 +76,28 @@ export const demoReports: Report[] = [
     confidence: "high",
     summary: "WHO reported three deaths in the MV Hondius-linked hantavirus cluster as of 7 May 2026.",
     raw_title: "WHO's response to hantavirus cases linked to a cruise ship",
+    raw_text: null,
+    created_at: now,
+    updated_at: now
+  },
+  {
+    id: "manual-hondius-confirmed-adjustment-2026-05-09",
+    country_id: "nld",
+    country: country("nld"),
+    location_name: "MV Hondius multi-country cluster",
+    lat: 52.1326,
+    lng: 5.2913,
+    status: "confirmed",
+    case_count: 295,
+    death_count: 0,
+    suspected_count: 0,
+    report_date: "2026-05-09T12:00:00.000Z",
+    source_name: "Manual dashboard override",
+    source_url: manualOverrideUrl,
+    source_type: "manual",
+    confidence: "medium",
+    summary: "Manual non-WHO adjustment requested by the site owner so the dashboard displays 300 infected/confirmed cases in total.",
+    raw_title: "Manual 300-case dashboard override",
     raw_text: null,
     created_at: now,
     updated_at: now
