@@ -127,7 +127,7 @@ export async function getReviewCandidates(limit = 50): Promise<ExtractionCandida
 export async function getGlobalStats(): Promise<GlobalStats> {
   const countryStats = await getCountryStats();
   const reports = await getReports({ limit: 200 });
-  const affected = countryStats.filter((country) => country.confirmed + country.suspected + country.deaths > 0);
+  const affected = countryStats.filter((country) => country.last_report || country.confirmed + country.suspected + country.deaths > 0);
 
   return {
     confirmed: countryStats.reduce((sum, country) => sum + country.confirmed, 0),
