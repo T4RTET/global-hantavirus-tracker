@@ -145,7 +145,8 @@ export async function getCountryBySlug(slug: string) {
   const supabase = getSupabaseService();
   const { data, error } = await supabase.from("country_rollups").select("*").eq("slug", slug).single();
   if (error) return getDemoCountryStats().find((country) => country.slug === slug) ?? null;
-  if (!data || Number(data.confirmed ?? 0) + Number(data.suspected ?? 0) + Number(data.deaths ?? 0) === 0) {
+  if (!data) return getDemoCountryStats().find((country) => country.slug === slug) ?? null;
+  if (!data.last_report && Number(data.confirmed ?? 0) + Number(data.suspected ?? 0) + Number(data.deaths ?? 0) === 0) {
     return getDemoCountryStats().find((country) => country.slug === slug) ?? null;
   }
   return data as CountryStats;
