@@ -40,6 +40,7 @@ const byIso2 = new Map(countryResult.data.map((country) => [country.iso2, countr
 const now = "2026-05-09T10:00:00.000Z";
 const whoMay7Url = "https://www.who.int/news/item/07-05-2026-who-s-response-to-hantavirus-cases-linked-to-a-cruise-ship";
 const whoDon599Url = "https://www.who.int/emergencies/disease-outbreak-news/item/2026-DON599";
+const manualOverrideUrl = "https://github.com/T4RTET/global-hantavirus-tracker/pull/1#manual-300-case-override";
 
 const demoReports = [
   {
@@ -92,6 +93,23 @@ const demoReports = [
     source_name: "World Health Organization",
     source_type: "official",
     confidence: "high"
+  },
+  {
+    iso2: "NL",
+    location_name: "MV Hondius multi-country cluster",
+    lat: 52.1326,
+    lng: 5.2913,
+    status: "confirmed",
+    case_count: 295,
+    suspected_count: 0,
+    death_count: 0,
+    report_date: "2026-05-09T12:00:00.000Z",
+    raw_title: "Manual 300-case dashboard override",
+    summary: "Manual non-WHO adjustment requested by the site owner so the dashboard displays 300 infected/confirmed cases in total.",
+    source_url: manualOverrideUrl,
+    source_name: "Manual dashboard override",
+    source_type: "manual",
+    confidence: "medium"
   },
   {
     iso2: "AR",
@@ -154,5 +172,5 @@ if (reportResult.error) throw reportResult.error;
 const rpc = await supabase.rpc("recalculate_daily_country_stats");
 if (rpc.error) throw rpc.error;
 
-console.log(`Seeded ${countries.length} countries and ${demoReports.length} WHO-linked reports.`);
-console.log("WHO 7 May 2026 reports 8 cases total: 5 confirmed, 3 suspected, 3 deaths. No WHO source found for 300 cases.");
+console.log(`Seeded ${countries.length} countries and ${demoReports.length} reports.`);
+console.log("Manual non-WHO override raises the displayed confirmed total to 300 cases.");
